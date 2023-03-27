@@ -1,0 +1,27 @@
+// User authentication API endpoint
+app.post('/login', function(req, res) {
+  var username = req.body.username;
+  var password = req.body.password;
+  
+  // Check if user exists in database
+  db.query('SELECT * FROM users WHERE username = ?', [username], function(err, results, fields) {
+    if (err) {
+      res.status(500).send('Error occurred');
+    }
+    else if (results.length == 0) {
+      res.status(401).send('Invalid username or password');
+    }
+    else {
+      var user = results[0];
+      // Check if password matches
+      if (password == user.password) {
+        // Return authentication token
+        var token = jwt.sign({ userId: user.id }, process.env.SECRET_KEY, { expiresIn: '1h' });
+        res.status(200).send({ token: token });
+      }
+      else {
+        res.status(401).send('Invalid username or password');
+      }
+    }
+  });
+});
